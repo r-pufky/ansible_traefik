@@ -1,0 +1,84 @@
+---
+###############################################################################
+# Default
+###############################################################################
+# Default configuration is deployed successfully.
+#
+# Tests:
+# * Traefik running (will not start with invalid config) for both toml/yaml
+#   static configurations.
+# * Traefik started/restarted correctly.
+# * Dashboard is accessible at http://localhost:8080/dashboard/.
+
+dependency:
+  name: 'galaxy'
+driver:
+  name: 'podman'
+provisioner:
+  name: 'ansible'
+  config_options:
+    defaults:
+      interpreter_python: 'auto_silent'
+      callback_whitelist: 'profile_tasks, timer, yaml'
+    ssh_connection:
+      pipelining: false
+  inventory:
+    group_vars:
+      all:
+        repo_testing_enable: true
+        repo_testing_versions:
+          - comment: 'default'
+            version: 'v3.5.3'
+            asset: '{{
+                lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
+                "/molecule/cache/" ~
+                "traefik_v3.5.3_linux_amd64.tar.gz"
+              }}'
+          - comment: 'default'
+            version: 'v3.5.3'
+            asset: '{{
+                lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
+                "/molecule/cache/" ~
+                "traefik_v3.5.3_linux_amd64.tar.gz"
+              }}'
+    host_vars:
+      traefik-debian-13-toml:
+        traefik_srv_cfg_dir:
+          '{{ lookup("env", "MOLECULE_SCENARIO_DIRECTORY") ~ "/files/toml" }}'
+      traefik-debian-13-yaml:
+        traefik_srv_cfg_dir:
+          '{{ lookup("env", "MOLECULE_SCENARIO_DIRECTORY") ~ "/files/yaml" }}'
+        traefik_srv_restart_enable: false
+platforms:
+  - name: 'traefik-debian-13-toml'
+    image: 'ghcr.io/hifis-net/debian-systemd:13'
+    systemd: 'always'
+    capabilities:
+      - 'SYS_ADMIN'  # Required for systemd hardening.
+    volumes:
+      - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
+    command: '/lib/systemd/systemd'
+    pre_build_image: true
+    published_ports:
+      - '8080:8080/tcp'
+      - '8443:443/tcp'
+  - name: 'traefik-debian-13-yaml'
+    image: 'ghcr.io/hifis-net/debian-systemd:13'
+    systemd: 'always'
+    capabilities:
+      - 'SYS_ADMIN'  # Required for systemd hardening.
+    volumes:
+      - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
+    command: '/lib/systemd/systemd'
+    pre_build_image: true
+verifier:
+  name: 'ansible'
+scenario:
+  test_sequence:
+    - 'destroy'
+    - 'syntax'
+    - 'create'
+    - 'prepare'
+    - 'converge'
+    - 'verify'
+    - 'destroy'

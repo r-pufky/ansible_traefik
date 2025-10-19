@@ -1,0 +1,54 @@
+---
+# yamllint disable rule:line-length
+###############################################################################
+# Default Traefik Package Dependencies
+###############################################################################
+# Default required packages for Traefik install.
+#
+# Updates:
+# * New MAJOR, MINOR releases should hard branch at version before starting
+#   (e.g. 2.14.x branch).
+# * Keep a separate change log as changes are made, you will not remember all
+#   of them.
+# * Use bare-metal docs to validate package/process changes.
+# * Update role defaults (includes updating defaults, tasks):
+#   * Use configuration docs to add new variables:
+#
+#       meld \
+#         <(curl -s https://github.com/traefik/traefik/blob/master/docs/content/reference/install-configuration/configuration-options.md)
+#         <(curl -s https://github.com/traefik/traefik/blob/v3.5.0/docs/content/reference/install-configuration/configuration-options.md)
+#
+#   * Use defaults/ to remove any changed/deprecated variables.
+# * Update tests for any changes.
+# * Standard role validation testing (yamllint, ansible-lint, todo, noqa).
+# * Tag with OS-APP-ROLE version.
+#
+# Reference:
+# * https://traefik.io/
+# * https://github.com/traefik/traefik/releases
+# yamllint enable rule:line-length
+
+# Last time Traefik options were validated against default configuration.
+traefik_role_validate_date: '2025-10-15'
+traefik_role_validate_release: 'trixie'
+traefik_role_validate_version: 'v3.5.3'
+
+###############################################################################
+# APT Packages
+###############################################################################
+
+traefik_role_packages:
+  - 'rsync'  # ansible.builtin.synchronize.
+
+###############################################################################
+# Traefik GitHub Options
+###############################################################################
+# Reference:
+# * https://github.com/traefik/traefik/releases/latest
+
+traefik_role_repo_release_owner: 'traefik'
+traefik_role_repo_release_repo: 'traefik'
+traefik_role_repo_extract_dir: '/opt/traefik'
+traefik_role_repo_extract_symlink: '/opt/traefik/traefik'
+traefik_role_repo_release_specifier: 'v'
+traefik_role_repo_release_asset: 'traefik_{VERSION}_linux_amd64.tar.gz'

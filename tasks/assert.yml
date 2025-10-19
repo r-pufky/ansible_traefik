@@ -1,0 +1,20 @@
+---
+###############################################################################
+# Assert Settings
+###############################################################################
+# Sanity check options to stop preventable errors and accidental data deletion.
+
+- name: 'Assert | required configuration files'
+  ansible.builtin.assert:
+    quiet: true
+    that: 'traefik_srv_cfg_dir | length > 0'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                   Configuration files required.                   │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Traefik requires configuration files sourced from ansible
+      │ controller.
+      │
+      │ traefik_srv_cfg_dir: {{ traefik_srv_cfg_dir }}

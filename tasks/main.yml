@@ -1,0 +1,14 @@
+---
+- name: 'Assert'
+  ansible.builtin.import_tasks: 'assert.yml'
+- name: 'Annotate'
+  ansible.builtin.import_tasks: 'annotate.yml'
+
+- name: 'Install'
+  when: not _traefik_srv_force_config_only_enable.raw
+  ansible.builtin.import_tasks: 'install.yml'
+
+- name: 'Config'
+  ansible.builtin.import_tasks: 'config.yml'
+- name: 'Validate'
+  ansible.builtin.import_tasks: 'validate.yml'

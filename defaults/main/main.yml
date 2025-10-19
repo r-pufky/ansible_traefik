@@ -1,0 +1,90 @@
+---
+###############################################################################
+# Traefik Service Configuration
+###############################################################################
+# WARNING
+# > Traefik runs as root to access privileged ports. Run in isolated container
+# > with no additional privileges or mounts. Service hardened with systemd.
+#
+# Install size: ~161MB
+#      traefik: ~161MB.
+#
+# Set repo_host_access_token if API is rate limited. See r_pufky.deb.repo.
+
+# Traefik Release.
+#
+# Versions (Schematic):
+#       MAJOR: Safe - Usually requires no role updates.
+#       MINOR: Safe - Usually requires no role updates.
+#       PATCH: Safe - Usually requires no role updates.
+#   RECOMMEND: Always check release notes when upgrading versions - custom
+#              configuration files may break though role will likely not. Never
+#              use 'latest'.
+#
+# Values:
+#   {VERSION}: Tagged release to use ('v3.5.3').
+#      latest: Use latest stable release.
+#
+# Default: 'v3.5.3'.
+#
+# Reference:
+# * https://doc.traefik.io/traefik/deprecation/releases
+traefik_srv_version: 'v3.5.3'
+
+# Traefik Configuration.
+#
+# Special Case:
+# * traefik.{toml,yml} startup configuration automatically selected for systemd
+#   service. YAML is used if both exist.
+# * Traefik daemon restricted to read/write on /var/lib/traefik. Place state
+#   (e.g. ACME certificate state) data here in settings.
+#
+# Sourced from ansible controller; automatically placed in
+# /etc/traefik/ with correct permissions.
+#
+# traefik_cfg_tls_cert: 'host_vars/db.example.com/data/traefik'
+#
+# Default: '' (disabled).
+traefik_srv_cfg_dir: ''
+
+# Enable service restart?
+#
+# Traefik only needs to be restarted for startup configuration changes.
+#
+# Values:
+#    True: Traefik is 'restarted' after role configuration is completed. May
+#          lead to service interruptions - startup configuration reloaded.
+#   False: Traefik is 'started' after role configuration is completed - startup
+#          configuration changes will NOT be picked up.
+#
+# Default: True.
+traefik_srv_restart_enable: true
+
+# Remove old installs on upgrade success? Default: True.
+traefik_srv_delete_old_versions_enable: true
+
+# Force overwrite existing install?
+#
+# DATA DESTRUCTIVE.
+#
+# Removes existing cached downloaded archives and existing same-version install
+# directories (if any). Any user data in these directories are DESTROYED.
+#
+# Default: False.
+traefik_srv_force_overwrite: false
+
+# Only apply configuration?
+#
+# Reduces role application time by ONLY applying configuration changes.
+#
+# This should ONLY be used after the role has been fully run once.
+#
+# Useful when adding a change without reconfiguring the whole system or
+# checking and installing a new version. Suggest applying with extra options:
+#
+#   ansible-playbook site.yml
+#       --tags Traefik
+#       -e 'traefik_srv_force_config_only_enable=true'
+#
+# Default: False.
+traefik_srv_force_config_only_enable: false

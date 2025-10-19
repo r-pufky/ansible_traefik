@@ -1,0 +1,32 @@
+---
+###############################################################################
+# Validate
+###############################################################################
+# Start Traefik service and confirm active and running.
+
+- name: 'Validate | start services'
+  ansible.builtin.systemd:
+    name: '{{ item }}'
+    enabled: true
+    daemon_reload: true
+    state: '{{ _traefik_srv_restart_enable._state }}'
+  failed_when: false
+  loop:
+    - 'traefik.service'
+
+- name: 'Validate | query service status'
+  ansible.builtin.service_facts:
+
+- name: 'Validate | assert services running'
+  ansible.builtin.assert:
+    quiet: true
+    that: ansible_facts.services[item].state == 'running'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                     Service failed to start.                      │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ {{ item }}
+  loop:
+    - 'traefik.service'

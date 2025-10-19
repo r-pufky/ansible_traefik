@@ -1,0 +1,75 @@
+---
+# yamllint disable rule:line-length
+###############################################################################
+# Annotate User Configuration.
+###############################################################################
+# Use r_pufky.data.v3 data annotations to enforce consistency and validation
+# checks.
+#
+# Reference:
+# * https://docs.ansible.com/ansible/latest/dev_guide/developing_program_flow_modules.html#argument-spec
+# * https://github.com/ansible/ansible/issues/77159
+# yamllint enable rule:line-length
+
+- name: 'Annotate | sanitize & annotate service defaults'
+  ansible.builtin.set_fact:  # noqa jinja[spacing] readability.
+    _traefik_srv_version: "{{ {} | r_pufky.data.v3(
+        raw=traefik_srv_version,
+        default=traefik_role_validate_version,
+        _bare=traefik_srv_version.split('v')[-1],
+        _url=(
+          'https://github.com/traefik/traefik/releases/download/' ~
+          traefik_srv_version ~
+          '/traefik_' ~
+          traefik_srv_version ~
+          '_linux_amd64.tar.gz'
+        ),
+        _sums=(
+          'https://github.com/traefik/traefik/releases/download/' ~
+          traefik_srv_version ~
+          '/traefik_' ~
+          traefik_srv_version ~
+          '_checksums.txt'
+        ),
+        hint='str',
+        order=1
+        )
+      }}"
+    _traefik_srv_cfg_dir: "{{ {} | r_pufky.data.v3(
+        raw=traefik_srv_cfg_dir,
+        default='',
+        _src=traefik_srv_cfg_dir | regex_replace('\\/$', '') ~ '/',
+        _dest='/etc/traefik',
+        hint='str',
+        order=2
+        )
+      }}"
+    _traefik_srv_restart_enable: "{{ {} | r_pufky.data.v3(
+        raw=traefik_srv_restart_enable,
+        default=true,
+        _state='restarted' if traefik_srv_restart_enable else 'started',
+        hint='bool',
+        order=3
+        )
+      }}"
+    _traefik_srv_delete_old_versions_enable: "{{ {} | r_pufky.data.v3(
+        raw=traefik_srv_delete_old_versions_enable,
+        default=true,
+        hint='bool',
+        order=4
+        )
+      }}"
+    _traefik_srv_force_overwrite: "{{ {} | r_pufky.data.v3(
+        raw=traefik_srv_force_overwrite,
+        default=false,
+        hint='bool',
+        order=5
+        )
+      }}"
+    _traefik_srv_force_config_only_enable: "{{ {} | r_pufky.data.v3(
+        raw=traefik_srv_force_config_only_enable,
+        default=false,
+        hint='bool',
+        order=6
+        )
+      }}"

@@ -1,0 +1,86 @@
+---
+###############################################################################
+# Configure Services
+###############################################################################
+# Create Debian standard locations for Traefik installation and use synchronize
+# in case there are configurations with multiple files.
+#
+# Prefer TOML static configuration file but use YAML if it is the only version
+# available for service.
+#
+# Reference:
+# * https://betatim.github.io/posts/traefik-config-bare-metal/
+
+- name: 'Config | manage data directories'
+  ansible.builtin.file:
+    path: '{{ item }}'
+    owner: 'root'
+    group: 'root'
+    mode: '0755'
+    recurse: true
+    state: 'directory'
+  loop:
+    - '/etc/traefik'
+    - '/var/lib/traefik'
+  become: true
+  become_user: 'root'
+
+- name: 'Config | set configuration'
+  ansible.posix.synchronize:
+    src: '{{ _traefik_srv_cfg_dir._src }}'
+    dest: '{{ _traefik_srv_cfg_dir._dest }}'
+    delete: true
+    recursive: true
+    archive: false
+    checksum: true
+
+- name: 'Sync | set permissions'
+  ansible.builtin.shell: >-
+    chown -R root:root '{{ _traefik_srv_cfg_dir._dest }}' &&
+    find '{{ _traefik_srv_cfg_dir._dest }}' -type d -exec chmod 0755 {} \; &&
+    find '{{ _traefik_srv_cfg_dir._dest }}' -type f -exec chmod 0640 {} \;
+  args:
+    executable: '/bin/bash'
+  changed_when: false
+
+- name: 'Config | query config type'
+  ansible.builtin.stat:
+    path: '/etc/traefik/traefik.yml'
+  register: _traefik_config
+
+- name: 'Config | set service definitions'
+  ansible.builtin.include_role:
+    name: 'r_pufky.deb.systemd'
+  vars:
+    systemd_daemon_reload_enable: true
+    systemd_services:
+      - name: 'traefik'
+        state: 'present'
+        drop_in: false
+        unit:
+          description: 'Traefik Application Proxy'
+          after:
+            - 'network.target'
+        service:
+          exec_start:
+            - '{{
+                "/opt/traefik/traefik/traefik " ~
+                "--configfile /etc/traefik/traefik." ~
+                ("yml" if _traefik_config.stat.exists else "toml")
+              }}'
+          restart: 'always'
+        exec:
+          user: 'root'
+          group: 'root'
+          protect_home: true
+          protect_system: 'strict'
+          private_tmp: true
+          private_devices: true
+          protect_kernel_tunables: true
+          protect_kernel_modules: true
+          read_write_paths:
+            - '/var/lib/traefik'
+          working_directory: '/var/lib/traefik'
+        install:
+          wanted_by:
+            - 'multi-user.target'

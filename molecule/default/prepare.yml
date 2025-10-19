@@ -1,0 +1,27 @@
+---
+- name: 'Prepare'
+  hosts: 127.0.0.1
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: 'Prepare | create cache'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'create_cache.yml'
+      vars:
+        test_name: 'Prepare | create cache'
+
+    - name: 'Prepare | check cache'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'cache_url.yml'
+      vars:
+        test_name: 'Prepare | cache {{ item }}'
+        test_dest: 'traefik_{{ item }}_linux_amd64.tar.gz'
+        test_url: '{{
+            "https://github.com/traefik/traefik/releases/download/" ~
+            item ~ "/traefik_" ~ item ~ "_linux_amd64.tar.gz"
+          }}'
+        test_mode: '0640'
+      loop:
+        - 'v3.5.3'
