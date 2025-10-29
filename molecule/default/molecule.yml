@@ -28,18 +28,18 @@ provisioner:
         repo_testing_enable: true
         repo_testing_versions:
           - comment: 'default'
-            version: 'v3.5.3'
+            version: 'v3.5.4'
             asset: '{{
                 lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
                 "/molecule/cache/" ~
-                "traefik_v3.5.3_linux_amd64.tar.gz"
+                "traefik_v3.5.4_linux_amd64.tar.gz"
               }}'
           - comment: 'default'
-            version: 'v3.5.3'
+            version: 'v3.5.4'
             asset: '{{
                 lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
                 "/molecule/cache/" ~
-                "traefik_v3.5.3_linux_amd64.tar.gz"
+                "traefik_v3.5.4_linux_amd64.tar.gz"
               }}'
     host_vars:
       traefik-debian-13-toml:
@@ -71,6 +71,9 @@ platforms:
       - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
     command: '/lib/systemd/systemd'
     pre_build_image: true
+    published_ports:
+      - '9080:8080/tcp'
+      - '9443:443/tcp'
 verifier:
   name: 'ansible'
 scenario:

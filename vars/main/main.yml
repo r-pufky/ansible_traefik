@@ -31,7 +31,7 @@
 # Last time Traefik options were validated against default configuration.
 traefik_role_validate_date: '2025-10-15'
 traefik_role_validate_release: 'trixie'
-traefik_role_validate_version: 'v3.5.3'
+traefik_role_validate_version: 'v3.5.4'
 
 ###############################################################################
 # APT Packages
@@ -52,3 +52,25 @@ traefik_role_repo_extract_dir: '/opt/traefik'
 traefik_role_repo_extract_symlink: '/opt/traefik/traefik'
 traefik_role_repo_release_specifier: 'v'
 traefik_role_repo_release_asset: 'traefik_{VERSION}_linux_amd64.tar.gz'
+
+###############################################################################
+# Default User/Group
+###############################################################################
+
+traefik_role_group:
+  name: 'traefik'
+  gid: 667
+
+traefik_role_user:
+  name: 'traefik'
+  group: 'traefik'
+  uid: 667
+  shell: '/usr/sbin/nologin'
+  home: '/etc/traefik'
+  comment: 'traefik daemon,,,'
+  create_home: false
+  password: '!'
+  password_lock: true
+  update_password: 'always'
+  expires: -1
+  system: true

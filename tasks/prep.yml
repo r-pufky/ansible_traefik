@@ -1,0 +1,47 @@
+---
+###############################################################################
+# Prep
+###############################################################################
+# Create user and determine UID/GID for potential remote filesystems.
+#
+# Generates:
+#   _traefik: dict - Role runtime specific config.
+
+- name: 'Prep | manage users'
+  when: _traefik_srv_create_user.raw
+  ansible.builtin.include_role:
+    name: 'r_pufky.deb.users'
+    tasks_from: 'role_account_add.yml'
+  vars:
+    users_role_user: '{{ traefik_role_user }}'
+    users_role_group: '{{ traefik_role_group }}'
+
+- name: 'Prep | enumerate system user {{ _traefik_srv_user.raw }}'
+  ansible.builtin.user:
+    name: '{{ _traefik_srv_user.raw }}'
+    state: 'present'
+  check_mode: true
+  changed_when: false
+  register: _traefik_srv_user_query
+
+- name: 'Prep | parse system user UID/GID'
+  ansible.builtin.set_fact:
+    _traefik_srv_user: '{{
+        _traefik_srv_user |
+        combine({"_uid": _traefik_srv_user_query.uid})
+      }}'
+    _traefik_srv_group: '{{
+        _traefik_srv_group |
+        combine({"_gid": _traefik_srv_user_query.group})
+      }}'
+
+- name: 'Prep | set service user'
+  ansible.builtin.set_fact:
+    _traefik: {
+      uid: '{{
+          _traefik_srv_user._uid if _traefik_srv_user_enable else "root"
+        }}',
+      gid: '{{
+          _traefik_srv_group._gid if _traefik_srv_user_enable else "root"
+        }}'
+    }

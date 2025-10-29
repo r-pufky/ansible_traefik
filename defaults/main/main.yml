@@ -22,14 +22,14 @@
 #              use 'latest'.
 #
 # Values:
-#   {VERSION}: Tagged release to use ('v3.5.3').
+#   {VERSION}: Tagged release to use ('v3.5.4').
 #      latest: Use latest stable release.
 #
-# Default: 'v3.5.3'.
+# Default: 'v3.5.4'.
 #
 # Reference:
 # * https://doc.traefik.io/traefik/deprecation/releases
-traefik_srv_version: 'v3.5.3'
+traefik_srv_version: 'v3.5.4'
 
 # Traefik Configuration.
 #
@@ -84,7 +84,43 @@ traefik_srv_force_overwrite: false
 #
 #   ansible-playbook site.yml
 #       --tags Traefik
-#       -e 'traefik_srv_force_config_only_enable=true'
+#       -e '{"traefik_srv_force_config_only_enable": true}'
 #
 # Default: False.
 traefik_srv_force_config_only_enable: false
+
+###############################################################################
+# Traefik User
+###############################################################################
+
+# Enable running service as traefik_srv_user?
+#
+# Values:
+#    True: Enable user - service will be created with CAP_NET_BIND_SERVICE
+#          capabilities to allow binding on ports <1024.
+#   False: Disable user (run as root) - Not recommended. Run in isolated
+#          VM or container; always try enabling first.
+#
+# Default: True.
+traefik_srv_user_enable: true
+
+# User that Traefik will run under.
+#
+# Enable traefik_srv_create_user if this account is not externally managed.
+#
+# Default: 'traefik'.
+traefik_srv_user: 'traefik'
+
+# Group that Traefik will run under.
+#
+# Enable traefik_srv_create_user if this group is not externally managed.
+#
+# Default: 'traefik'.
+traefik_srv_group: 'traefik'
+
+# Create traefik_srv_user, traefik_srv_group if not detected?
+#
+# Applied via r_pufky.deb.users, see vars/main.yml for default user attributes.
+#
+# Default: True.
+traefik_srv_create_user: true

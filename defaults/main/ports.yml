@@ -19,8 +19,8 @@ traefik_srv_ports:
   - proto: 'tcp'
     from_ip: 'any'
     to_port: 443
-    comment: 'HTTP'
+    comment: 'HTTPS'
   - proto: 'udp'
     from_ip: 'any'
     to_port: 443
-    comment: 'HTTP'
+    comment: 'HTTPS'

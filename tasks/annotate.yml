@@ -73,3 +73,31 @@
         order=6
         )
       }}"
+    _traefik_srv_user_enable: "{{ {} | r_pufky.data.v3(
+        raw=traefik_srv_user_enable,
+        default=true,
+        hint='bool',
+        order=7
+        )
+      }}"
+    _traefik_srv_user: "{{ {} | r_pufky.data.v3(
+        raw=traefik_srv_user,
+        default='traefik',
+        hint='str',
+        order=8
+        )
+      }}"
+    _traefik_srv_group: "{{ {} | r_pufky.data.v3(
+        raw=traefik_srv_group,
+        default='traefik',
+        hint='str',
+        order=9
+        )
+      }}"
+    _traefik_srv_create_user: "{{ {} | r_pufky.data.v3(
+        raw=traefik_srv_create_user,
+        default='traefik',
+        hint='str',
+        order=10
+        )
+      }}"

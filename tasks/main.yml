@@ -3,6 +3,8 @@
   ansible.builtin.import_tasks: 'assert.yml'
 - name: 'Annotate'
   ansible.builtin.import_tasks: 'annotate.yml'
+- name: 'Prep'
+  ansible.builtin.import_tasks: 'prep.yml'
 
 - name: 'Install'
   when: not _traefik_srv_force_config_only_enable.raw
