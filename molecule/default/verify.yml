@@ -3,7 +3,7 @@
   hosts: 'all'
   gather_facts: false
   tasks:
-    - name: 'Verify | query dashboard'
+    - name: 'Verify | query dashboard toml'
       ansible.builtin.uri:
         url: 'http://localhost:8080/dashboard/'
         method: 'GET'

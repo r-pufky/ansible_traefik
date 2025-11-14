@@ -20,6 +20,8 @@
 #
 #   * Use defaults/ to remove any changed/deprecated variables.
 # * Update tests for any changes.
+#   * Use BARE VERSION for find and replace to set new version.
+#     * Both: 3.5.x and 3.6x branches.
 # * Standard role validation testing (yamllint, ansible-lint, todo, noqa).
 # * Tag with OS-APP-ROLE version.
 #
@@ -31,7 +33,7 @@
 # Last time Traefik options were validated against default configuration.
 traefik_role_validate_date: '2025-10-15'
 traefik_role_validate_release: 'trixie'
-traefik_role_validate_version: 'v3.5.4'
+traefik_role_validate_version: 'v3.5.6'
 
 ###############################################################################
 # APT Packages

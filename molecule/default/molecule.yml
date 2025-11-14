@@ -28,18 +28,25 @@ provisioner:
         repo_testing_enable: true
         repo_testing_versions:
           - comment: 'default'
-            version: 'v3.5.4'
+            version: 'v3.5.6'
             asset: '{{
                 lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
                 "/molecule/cache/" ~
-                "traefik_v3.5.4_linux_amd64.tar.gz"
+                "traefik_v3.5.6_linux_amd64.tar.gz"
               }}'
           - comment: 'default'
-            version: 'v3.5.4'
+            version: 'v3.5.6'
             asset: '{{
                 lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
                 "/molecule/cache/" ~
-                "traefik_v3.5.4_linux_amd64.tar.gz"
+                "traefik_v3.5.6_linux_amd64.tar.gz"
+              }}'
+          - comment: 'default'
+            version: 'v3.6.1'
+            asset: '{{
+                lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
+                "/molecule/cache/" ~
+                "traefik_v3.6.1_linux_amd64.tar.gz"
               }}'
     host_vars:
       traefik-debian-13-toml:
@@ -48,7 +55,9 @@ provisioner:
       traefik-debian-13-yaml:
         traefik_srv_cfg_dir:
           '{{ lookup("env", "MOLECULE_SCENARIO_DIRECTORY") ~ "/files/yaml" }}'
-        traefik_srv_restart_enable: false
+      traefik-debian-13-3.6:
+        traefik_srv_cfg_dir:
+          '{{ lookup("env", "MOLECULE_SCENARIO_DIRECTORY") ~ "/files/toml" }}'
 platforms:
   - name: 'traefik-debian-13-toml'
     image: 'ghcr.io/hifis-net/debian-systemd:13'
@@ -74,6 +83,18 @@ platforms:
     published_ports:
       - '9080:8080/tcp'
       - '9443:443/tcp'
+  - name: 'traefik-debian-13-3.6'
+    image: 'ghcr.io/hifis-net/debian-systemd:13'
+    systemd: 'always'
+    capabilities:
+      - 'SYS_ADMIN'  # Required for systemd hardening.
+    volumes:
+      - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
+    command: '/lib/systemd/systemd'
+    pre_build_image: true
+    published_ports:
+      - '10080:8080/tcp'
+      - '10443:443/tcp'
 verifier:
   name: 'ansible'
 scenario:
