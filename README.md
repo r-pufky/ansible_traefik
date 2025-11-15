@@ -47,7 +47,7 @@ api:
 ```
 
 ## Development
-Configure [environment](https://github.com/r-pufky/ansible_collection_docs/blob/main/ansible/environment.md)
+Configure [environment](https://r-pufky.github.io/ansible_collection_docs/ansible/environment)
 
 Run all unit tests:
 ``` bash
