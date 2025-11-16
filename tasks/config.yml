@@ -26,13 +26,14 @@
   become_user: 'root'
 
 - name: 'Config | set configuration'
-  ansible.posix.synchronize:
+  ansible.builtin.copy:
     src: '{{ _traefik_srv_cfg_dir._src }}'
     dest: '{{ _traefik_srv_cfg_dir._dest }}'
-    delete: true
-    recursive: true
-    archive: false
-    checksum: true
+    decrypt: true
+    owner: '{{ _traefik.uid }}'
+    group: '{{ _traefik.gid }}'
+    mode: '0640'
+    directory_mode: '0750'
 
 # yamllint disable rule:line-length
 - name: 'Sync | set permissions'
