@@ -42,7 +42,7 @@
     find '{{ _traefik_srv_cfg_dir._dest }}' -type d -exec chmod 0750 {} \; &&
     find '{{ _traefik_srv_cfg_dir._dest }}' -type f -exec chmod 0640 {} \; &&
     find '/var/lib/traefik' -type d -exec chmod 0750 {} \; &&
-    find '/var/lib/traefik' -type f -exec chmod 0640 {} \;
+    find '/var/lib/traefik' -type f -exec chmod 0600 {} \;
   args:
     executable: '/bin/bash'
   changed_when: false
