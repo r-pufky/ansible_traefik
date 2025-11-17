@@ -31,6 +31,25 @@
 # * https://doc.traefik.io/traefik/deprecation/releases
 traefik_srv_version: 'v3.5.6'
 
+# Traefik Environment.
+#
+# Set environment variables for Traefik service. Especially useful for setting
+# lego configuration for let's encrypt certificates on bare metal.
+#
+# traefik_srv_env:
+#     list of dict - Environment variables to set.
+#   - var: str - Environment variable name.
+#     value: str - Environment variable value.
+#
+# traefik_srv_env:
+#   - var: 'GCE_PROJECT'
+#     value: 'my-project-id-123456789'
+#   - var: 'GCE_SERVICE_ACCOUNT_FILE'
+#     value: '/etc/traefik/gcloud_dns.json'  # Use traefik_srv_cfg_dir.
+#
+# Default: [] (disabled).
+traefik_srv_env: []
+
 # Traefik Configuration.
 #
 # Special Case:
@@ -38,6 +57,7 @@ traefik_srv_version: 'v3.5.6'
 #   service. YAML is used if both exist.
 # * Traefik daemon restricted to read/write on /var/lib/traefik. Place state
 #   (e.g. ACME certificate state) data here in settings.
+# * Place service credential files here.
 #
 # Sourced from ansible controller; automatically placed in
 # /etc/traefik/ with correct permissions.

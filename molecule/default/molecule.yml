@@ -55,6 +55,11 @@ provisioner:
       traefik-debian-13-yaml:
         traefik_srv_cfg_dir:
           '{{ lookup("env", "MOLECULE_SCENARIO_DIRECTORY") ~ "/files/yaml" }}'
+        traefik_srv_env:
+          - var: 'GCE_PROJECT'
+            value: 'my-project-id-123456789'
+          - var: 'GCE_SERVICE_ACCOUNT_FILE'
+            value: '/etc/traefik/gcloud_dns.json'
       traefik-debian-13-3.6:
         traefik_srv_cfg_dir:
           '{{ lookup("env", "MOLECULE_SCENARIO_DIRECTORY") ~ "/files/toml" }}'

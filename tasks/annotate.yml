@@ -35,13 +35,20 @@
         order=1
         )
       }}"
+    _traefik_srv_env: "{{ {} | r_pufky.data.v3(
+        raw=traefik_srv_env,
+        default=[],
+        hint='list of dict',
+        order=2
+        )
+      }}"
     _traefik_srv_cfg_dir: "{{ {} | r_pufky.data.v3(
         raw=traefik_srv_cfg_dir,
         default='',
         _src=traefik_srv_cfg_dir | regex_replace('\\/$', '') ~ '/',
         _dest='/etc/traefik',
         hint='str',
-        order=2
+        order=3
         )
       }}"
     _traefik_srv_restart_enable: "{{ {} | r_pufky.data.v3(
@@ -49,55 +56,55 @@
         default=true,
         _state='restarted' if traefik_srv_restart_enable else 'started',
         hint='bool',
-        order=3
+        order=4
         )
       }}"
     _traefik_srv_delete_old_versions_enable: "{{ {} | r_pufky.data.v3(
         raw=traefik_srv_delete_old_versions_enable,
         default=true,
         hint='bool',
-        order=4
+        order=5
         )
       }}"
     _traefik_srv_force_overwrite: "{{ {} | r_pufky.data.v3(
         raw=traefik_srv_force_overwrite,
         default=false,
         hint='bool',
-        order=5
+        order=6
         )
       }}"
     _traefik_srv_force_config_only_enable: "{{ {} | r_pufky.data.v3(
         raw=traefik_srv_force_config_only_enable,
         default=false,
         hint='bool',
-        order=6
+        order=7
         )
       }}"
     _traefik_srv_user_enable: "{{ {} | r_pufky.data.v3(
         raw=traefik_srv_user_enable,
         default=true,
         hint='bool',
-        order=7
+        order=8
         )
       }}"
     _traefik_srv_user: "{{ {} | r_pufky.data.v3(
         raw=traefik_srv_user,
         default='traefik',
         hint='str',
-        order=8
+        order=9
         )
       }}"
     _traefik_srv_group: "{{ {} | r_pufky.data.v3(
         raw=traefik_srv_group,
         default='traefik',
         hint='str',
-        order=9
+        order=10
         )
       }}"
     _traefik_srv_create_user: "{{ {} | r_pufky.data.v3(
         raw=traefik_srv_create_user,
         default='traefik',
         hint='str',
-        order=10
+        order=11
         )
       }}"

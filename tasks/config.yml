@@ -79,6 +79,7 @@
         exec:
           user: '{{ _traefik.uid }}'
           group: '{{ _traefik.gid }}'
+          environment: '{{ _traefik_srv_env.raw }}'
           protect_home: true
           protect_system: 'strict'
           private_tmp: true
