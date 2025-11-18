@@ -1,0 +1,5 @@
+---
+http:
+  routers:
+    test:
+      rule: 'Host(`variable_replace_test`)'

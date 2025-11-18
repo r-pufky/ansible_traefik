@@ -8,3 +8,43 @@
         url: 'http://localhost:8080/dashboard/'
         method: 'GET'
         status_code: 200
+
+- name: 'Verify | YAML variables'
+  hosts: 'traefik-debian-13-yaml'
+  gather_facts: false
+  tasks:
+    - name: 'Verify | assert template rendered correctly'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'copy.yml'
+      vars:
+        test_name: 'Verify | assert template rendered correctly'
+        test_src: '{{
+            lookup("env", "MOLECULE_SCENARIO_DIRECTORY") ~ "/tests/test.yml"
+          }}'
+        test_remote_src: false
+        test_file: '/etc/traefik/dynamic/test.yml'
+        test_owner: 'traefik'
+        test_group: 'traefik'
+        test_mode: '0640'
+        test_diff: true
+
+- name: 'Verify | TOML variables'
+  hosts: 'traefik-debian-13-toml'
+  gather_facts: false
+  tasks:
+    - name: 'Verify | assert template rendered correctly'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'copy.yml'
+      vars:
+        test_name: 'Verify | assert template rendered correctly'
+        test_src: '{{
+            lookup("env", "MOLECULE_SCENARIO_DIRECTORY") ~ "/tests/test.toml"
+          }}'
+        test_remote_src: false
+        test_file: '/etc/traefik/dynamic/test.toml'
+        test_owner: 'traefik'
+        test_group: 'traefik'
+        test_mode: '0640'
+        test_diff: true

@@ -1,0 +1,3 @@
+[http.routers]
+  [http.routers.test]
+    rule = 'Host(`{{ test_host }}`)'

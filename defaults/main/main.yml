@@ -22,7 +22,7 @@
 #              use 'latest'.
 #
 # Values:
-#   {VERSION}: Tagged release to use ('v3.5.6', 'v3.6.1').
+#   {VERSION}: Tagged release to use ('v3.5.6', 'v3.6.2').
 #      latest: Use latest stable release.
 #
 # Default: 'v3.5.6'.
@@ -57,7 +57,9 @@ traefik_srv_env: []
 #   service. YAML is used if both exist.
 # * Traefik daemon restricted to read/write on /var/lib/traefik. Place state
 #   (e.g. ACME certificate state) data here in settings.
-# * Place service credential files here.
+# * Service credential files should be placed here.
+# * Vault encrypted files will automatically be decrypted on remote.
+# * Template files may be used (without template extension).
 #
 # Sourced from ansible controller; automatically placed in
 # /etc/traefik/ with correct permissions.
