@@ -22,7 +22,7 @@
 # * Update tests for any changes.
 #   * Use BARE VERSION for find and replace to set new version.
 #     * Both: 3.5.x and 3.6x branches.
-# * Standard role validation testing (yamllint, ansible-lint, todo, noqa).
+# * Standard role validation testing (yamllint, ansible-lint, to-do, no-qa).
 # * Tag with OS-APP-ROLE version.
 #
 # Reference:
@@ -34,13 +34,6 @@
 traefik_role_validate_date: '2025-10-15'
 traefik_role_validate_release: 'trixie'
 traefik_role_validate_version: 'v3.5.6'
-
-###############################################################################
-# APT Packages
-###############################################################################
-
-traefik_role_packages:
-  - 'rsync'  # ansible.builtin.synchronize.
 
 ###############################################################################
 # Traefik GitHub Options

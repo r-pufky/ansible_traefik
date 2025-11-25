@@ -64,7 +64,7 @@ traefik_srv_env: []
 # Sourced from ansible controller; automatically placed in
 # /etc/traefik/ with correct permissions.
 #
-# traefik_cfg_tls_cert: 'host_vars/db.example.com/data/traefik'
+# traefik_srv_cfg_dir: 'host_vars/db.example.com/data/traefik'
 #
 # Default: '' (disabled).
 traefik_srv_cfg_dir: ''

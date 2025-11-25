@@ -103,8 +103,8 @@
       }}"
     _traefik_srv_create_user: "{{ {} | r_pufky.data.v3(
         raw=traefik_srv_create_user,
-        default='traefik',
-        hint='str',
+        default=true,
+        hint='bool',
         order=11
         )
       }}"

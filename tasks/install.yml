@@ -4,14 +4,6 @@
 ###############################################################################
 # Traefik is a static golang binary. Just extract and set proper permissions.
 
-- name: 'Install | packages'
-  ansible.builtin.include_role:
-    name: 'r_pufky.deb.apt'
-  vars:
-    apt_packages:
-      - '{{ traefik_role_packages }}'
-    apt_package_update_cache: true
-
 - name: 'Install | Traefik {{ _traefik_srv_version.raw }}'
   when: not _traefik_srv_force_config_only_enable.raw
   ansible.builtin.include_role:
