@@ -29,11 +29,18 @@ provisioner:
         test_host: 'variable_replace_test'
         repo_testing_versions:
           - comment: 'default'
-            version: 'v3.5.6'
+            version: 'v3.6.7'
             asset: '{{
                 lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
                 "/molecule/cache/" ~
-                "traefik_v3.5.6_linux_amd64.tar.gz"
+                "traefik_v3.6.7_linux_amd64.tar.gz"
+              }}'
+          - comment: 'default'
+            version: 'v3.6.7'
+            asset: '{{
+                lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
+                "/molecule/cache/" ~
+                "traefik_v3.6.7_linux_amd64.tar.gz"
               }}'
           - comment: 'default'
             version: 'v3.5.6'
@@ -41,13 +48,6 @@ provisioner:
                 lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
                 "/molecule/cache/" ~
                 "traefik_v3.5.6_linux_amd64.tar.gz"
-              }}'
-          - comment: 'default'
-            version: 'v3.6.2'
-            asset: '{{
-                lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
-                "/molecule/cache/" ~
-                "traefik_v3.6.2_linux_amd64.tar.gz"
               }}'
     host_vars:
       traefik-debian-13-toml:

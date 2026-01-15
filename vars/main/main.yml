@@ -33,7 +33,7 @@
 # Last time Traefik options were validated against default configuration.
 traefik_role_validate_date: '2025-10-15'
 traefik_role_validate_release: 'trixie'
-traefik_role_validate_version: 'v3.5.6'
+traefik_role_validate_version: 'v3.6.7'
 
 ###############################################################################
 # Traefik GitHub Options
