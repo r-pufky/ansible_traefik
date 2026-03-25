@@ -22,7 +22,7 @@ WARNING
 > with no additional privileges or mounts. Service hardened with systemd.
 
 Read defaults documentation.
-[Additional documentation](http://r-pufky.github.io/r-pufky/docs/service/traefik).
+[Additional documentation](http://r-pufky.github.io/docs/service/traefik).
 
 Deploy Traefik with a minimal startup configuration.
 
