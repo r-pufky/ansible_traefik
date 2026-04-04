@@ -1,26 +1,176 @@
 ---
 ###############################################################################
-# Install Packages & Services
+# Install
 ###############################################################################
-# Traefik is a static golang binary. Just extract and set proper permissions.
+# Install specified version from github release. Use custom service according
+# to Linux FHS standards:
+#
+# Type    | Perms               | Path
+# --------|---------------------|-------
+# Runtime | 0750/0640 SRV:SRV   | /var/opt/traefik
+# Source  | 0755/0644 root:root | /opt/traefik
+# etc     | 0640/0755 SRV:SRV   | /etc/opt/traefik
+# bin     | 0755/0755 root:root | /usr/local/bin/traefik
+#
+# Reference:
+# * https://betatim.github.io/posts/traefik-config-bare-metal
 
-- name: 'Install | Traefik {{ _traefik_srv_version.raw }}'
-  when: not _traefik_srv_force_config_only_enable.raw
+- name: 'Install | filesystem | set system directories'
+  ansible.builtin.file:
+    path: '{{ traefik___app._src_d }}'  # src_d includes opt_d.
+    owner: 'root'
+    group: 'root'
+    mode: '0755'
+    state: 'directory'
+
+- name: '{{ "Install | filesystem | set " ~ traefik__cfg._etc_d }}'
+  ansible.builtin.file:
+    path: '{{ traefik__cfg._etc_d }}'
+    owner: '{{ traefik__srv._user }}'
+    group: '{{ traefik__srv._group }}'
+    mode: '0755'
+    state: 'directory'
+
+- name: '{{ "Install | filesystem | set " ~ traefik__cfg._var_d }}'
+  ansible.builtin.file:
+    path: '{{ traefik__cfg._var_d }}'
+    owner: '{{ traefik__srv._user }}'
+    group: '{{ traefik__srv._group }}'
+    mode: '0755'
+    state: 'directory'
+
+- name: 'Install | packages'
   ansible.builtin.include_role:
-    name: 'r_pufky.deb.repo'
+    name: 'r_pufky.deb.apt'
   vars:
-    repo_release_owner: '{{ traefik_role_repo_release_owner }}'
-    repo_release_repo: '{{ traefik_role_repo_release_repo }}'
-    repo_release_tag: '{{ _traefik_srv_version.raw }}'
-    repo_release_specifier: '{{ traefik_role_repo_release_specifier }}'
-    repo_release_asset: '{{ traefik_role_repo_release_asset }}'
-    repo_extract_dir: '{{ traefik_role_repo_extract_dir }}'
-    repo_extract_symlink: '{{ traefik_role_repo_extract_symlink }}'
-    repo_extract_delete_old_versions:
-      '{{ _traefik_srv_delete_old_versions_enable.raw }}'
-    repo_force_overwrite: '{{ _traefik_srv_force_overwrite.raw }}'
-    repo_extract_mode: 'a-st'
-    repo_extract_extra_opts: []
-    repo_extract_remove_files:
+    apt_packages:
+      - '{{ traefik___packages }}'
+    apt_srv_package_update_cache: true
+
+###############################################################################
+# Traefik
+###############################################################################
+
+- name: 'Install | filesystem | find previous installations'
+  ansible.builtin.find:
+    paths: '{{ traefik___app._src_d }}'
+    file_type: 'directory'
+    recurse: false
+    excludes:
+      - '{{ traefik__cfg._version }}'
+  register: traefik__cmd
+
+- name: 'Install | filesystem | remove previous installations'
+  ansible.builtin.file:
+    path: '{{ item.path }}'
+    state: 'absent'
+  loop: '{{ traefik__cmd.files }}'
+  loop_control:
+    label: '{{ item.path }}'
+
+- name: 'Install | url | 🗘 Traefik (~2 minutes) 🗘'
+  when: not (molecule_flg_inject | default(false))
+  ansible.builtin.get_url:
+    url: '{{ traefik__cfg._url_base ~ item }}'
+    dest: '{{ "/tmp/" ~ item }}'
+    force: false
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+    headers:
+      Authorization: '{{ traefik__srv._token | default(omit) }}'
+  register: traefik__cmd
+  until: traefik__cmd is succeeded
+  loop:
+    - '{{ traefik__cfg._package }}'
+    - '{{ traefik__cfg._package_sum }}'
+
+- name: '{{ "Install | security | verify checksum " ~ traefik__cfg._package }}'
+  ansible.builtin.shell: >-
+    set -o pipefail &&
+    grep {{ traefik__cfg._package ~ " " ~ traefik__cfg._package_sum }} |
+    shasum --status --strict --check
+  args:
+    chdir: '/tmp'
+  changed_when: false
+
+- name: '{{ "Install | filesystem | set " ~ traefik__cfg._app_d }}'
+  ansible.builtin.file:
+    path: '{{ traefik__cfg._app_d }}'
+    owner: 'root'
+    group: 'root'
+    mode: '0755'
+    state: 'directory'
+  register: traefik__cmd
+
+- name: 'Install | filesystem | unpack Traefik'
+  ansible.builtin.unarchive:
+    creates: '{{ traefik__cfg._app_d ~ "traefik" }}'
+    src: '{{ "/tmp/" ~ traefik__cfg._package }}'
+    remote_src: true
+    dest: '{{ traefik__cfg._app_d }}'
+    owner: 'root'
+    group: 'root'
+    mode: 'a-st'
+    exclude:
       - 'CHANGELOG.md'
       - 'LICENSE.md'
+
+- name: 'Install | filesystem | add system paths'
+  ansible.builtin.file:
+    src: '{{ traefik__cfg._app_d ~ "/traefik" }}'
+    path: '{{ traefik__cfg._bin }}'
+    owner: 'root'
+    group: 'root'
+    mode: '0755'
+    state: 'link'
+
+- name: '{{ "Install | filesystem | set minimal " ~ traefik___app._etc_d }}'
+  when: traefik__cfg._d | length == 0
+  block:
+    - name: 'Config | filetree | set managed directories'
+      ansible.builtin.file:
+        path: '{{ traefik___app._etc_d ~ "/" ~ item.path }}'
+        owner: '{{ traefik__srv._user }}'
+        group: '{{ traefik__srv._group }}'
+        mode: '0750'
+        state: 'directory'
+      loop: '{{ query("community.general.filetree", "templates/default") }}'
+      loop_control:
+        label: '{{ item.path }}'
+      when: item.state == 'directory'
+
+    - name: 'Config | filetree | set managed files'
+      ansible.builtin.template:
+        src: '{{ item.src }}'
+        dest: '{{ traefik___app._etc_d ~ "/" ~ item.path }}'
+        owner: '{{ traefik__srv._user }}'
+        group: '{{ traefik__srv._group }}'
+        mode: '0640'
+      loop: '{{ query("community.general.filetree", "templates/default") }}'
+      loop_control:
+        label: '{{ item.path }}'
+      when: item.state == 'file'
+
+    - name: 'Config | filesystem | query remote files'
+      ansible.builtin.find:
+        paths: '{{ traefik___app._etc_d }}'
+        file_type: 'any'
+        hidden: true
+        recurse: true
+      register: traefik__remote
+
+    - name: 'Config | filetree | remove unmanaged files and directories'
+      ansible.builtin.file:
+        path: '{{ item.path }}'
+        state: 'absent'
+      loop: '{{ traefik__remote.files | sort(attribute="path", reverse=true) }}'
+      loop_control:
+        label: '{{ item.path }}'
+      when: >
+        item.path not in
+        (
+          query("community.general.filetree", "templates/default") |
+          map(attribute='path') |
+          map('regex_replace', '^', traefik___app._etc_d ~ "/") | list
+        )

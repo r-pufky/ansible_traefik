@@ -1,0 +1,19 @@
+---
+###############################################################################
+# Services
+###############################################################################
+# Service requires dynamic environment values and whether to launch with yaml
+# or toml as the static configuration file.
+
+- name: 'Services | filesystem | query startup configuration type'
+  ansible.builtin.stat:
+    path: '{{ traefik___app._etc_d ~ "/traefik.yml" }}'
+  register: traefik__yaml
+
+- name: '{{ "Services | filesystem | set " ~ traefik__cfg._service }}'
+  ansible.builtin.template:
+    src: 'systemd/traefik.service.j2'
+    dest: '{{ traefik__cfg._service }}'
+    owner: 'root'
+    group: 'root'
+    mode: '0644'

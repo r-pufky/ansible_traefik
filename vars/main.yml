@@ -1,0 +1,80 @@
+---
+# yamllint disable rule:line-length
+###############################################################################
+# Traefik Role Options
+###############################################################################
+# Default required packages for Traefik install.
+#
+# Updates:
+# * KEEP a separate change log as changes are made.
+# * Use bare-metal docs to validate package/process changes.
+# * Update defaults.
+# * Update tests for any changes.
+# * Standard validation testing (yamllint, ansible-lint, to-do, no-qa).
+#
+# Reference:
+# * https://traefik.io/
+# * https://github.com/traefik/traefik/releases
+# * https://github.com/traefik/traefik/blob/master/docs/content/reference/install-configuration/configuration-options.md
+# yamllint enable rule:line-length
+
+traefik___release: "{{ {} | r_pufky.data.v3(
+
+    _date='2026-04-02',
+    _debian='trixie',
+    _app='v3.6.12',
+  ) }}"
+
+traefik___packages:
+  - 'apache2-utils'  # For htpasswd.
+
+###############################################################################
+# Traefik GitHub Options
+###############################################################################
+# Reference:
+# * https://github.com/traefik/traefik/releases/latest
+
+traefik___repo_url:
+  'https://github.com/traefik/traefik/releases/download/'
+traefik___package:
+  '{{ "traefik_" ~ traefik___release._app ~ "_linux_amd64.tar.gz" }}'
+traefik___package_sum:
+  '{{ "traefik_" ~ traefik___release._app ~ "_checksums.txt" }}'
+
+traefik___app: "{{ {} | r_pufky.data.v3(
+
+    _version=traefik___release._app,
+    _package=traefik___package,
+    _package_sum=traefik___package_sum,
+    _bin='/usr/local/bin/traefik',
+
+    _etc_d='/etc/opt/traefik',
+    _opt_d='/opt/traefik',
+    _var_d='/var/opt/traefik',
+    _src_d='/opt/traefik/src',
+    _app_d='/opt/traefik/src' ~ traefik___release._app,
+    _service='/etc/systemd/system/traefik.service',
+    _url_base=traefik___repo_url ~ traefik___release._app ~ '/',
+  ) }}"
+
+###############################################################################
+# Default User/Group
+###############################################################################
+
+traefik___group:
+  name: 'traefik'
+  gid: 667
+
+traefik___user:
+  name: 'traefik'
+  group: 'traefik'
+  uid: 667
+  shell: '/usr/sbin/nologin'
+  home: '/etc/traefik'
+  comment: 'traefik daemon,,,'
+  create_home: false
+  password: '!'
+  password_lock: true
+  update_password: 'always'
+  expires: -1
+  system: true

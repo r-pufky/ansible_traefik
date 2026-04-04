@@ -1,0 +1,20 @@
+---
+log:
+  level: 'DEBUG'
+  format: 'json'
+
+accessLog:
+  format: 'json'
+
+# Never run dashboard insecure in production or externally facing machines.
+api:
+  dashboard: true
+  disableDashboardAd: true
+  insecure: true
+  debug: true
+
+# Dynamically load all other configuration.
+providers:
+  file:
+    directory: '/etc/opt/traefik/dynamic'
+    watch: true

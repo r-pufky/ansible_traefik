@@ -7,7 +7,7 @@
 # Reference:
 # * https://github.com/r-pufky/ansible_ufw
 
-traefik_srv_ports:
+traefik_ports:
   - proto: 'tcp'
     from_ip: 'any'
     to_port: 80

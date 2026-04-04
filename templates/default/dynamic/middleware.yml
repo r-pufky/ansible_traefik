@@ -1,0 +1,9 @@
+---
+# Basic authentication users.
+#
+# Create user/pass with bcrypt hash:
+#
+#   htpasswd -nB {USER}
+#
+http:
+  middlewares:

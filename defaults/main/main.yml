@@ -1,15 +1,35 @@
 ---
 ###############################################################################
-# Traefik Service Configuration
+# Feature Flags
 ###############################################################################
-# WARNING
-# > Traefik runs as root to access privileged ports. Run in isolated container
-# > with no additional privileges or mounts. Service hardened with systemd.
+
+# 1. Run maintenance tasks?
 #
-# Install size: ~161MB
-#      traefik: ~161MB.
+# Preform role maintenance tasks including removal of old role versions.
 #
-# Set repo_host_access_token if API is rate limited. See r_pufky.deb.repo.
+# Default: True.
+traefik_flg_maintenance: true
+
+# 2. Install application?
+#
+# Creates required default directories, users, install packages, download
+# software, autogenerates dashboard config if not specified, update and start
+# services.
+#
+# Default: True.
+traefik_flg_install: true
+
+# 3. Set configuration data?
+#
+# Overwrite /etc/opt/traefik config directory sourced from traefik_cfg_d. Stops
+# service, deploys user config data, updates and starts services.
+#
+# Default: False.
+traefik_flg_config: false
+
+###############################################################################
+# Service
+###############################################################################
 
 # Traefik Release.
 #
@@ -18,60 +38,81 @@
 #       MINOR: Safe - Usually requires no role updates.
 #       PATCH: Safe - Usually requires no role updates.
 #   RECOMMEND: Always check release notes when upgrading versions - custom
-#              configuration files may break though role will likely not. Never
-#              use 'latest'.
+#              configuration files may break though role will likely not.
 #
-# Values:
-#   {VERSION}: Tagged release to use ('v3.6.7', 'v3.5.6').
-#      latest: Use latest stable release.
-#
-# Default: 'v3.6.7'.
+# Default: 'v3.6.12'.
 #
 # Reference:
 # * https://doc.traefik.io/traefik/deprecation/releases
-traefik_srv_version: 'v3.6.7'
+traefik_srv_version: 'v3.6.12'
 
-# Traefik Environment.
+# Github access token (traefik).
 #
-# Set environment variables for Traefik service. Especially useful for setting
-# lego configuration for let's encrypt certificates on bare metal.
+# Unauthenticated (anonymous) API requests are heavily restricted to the sum
+# total of requests to github from a given IP. Use an access token if
+# receiving 403's.
 #
-# traefik_srv_env:
-#     list of dict - Environment variables to set.
-#   - var: str - Environment variable name.
-#     value: str - Environment variable value.
+# Classic Tokens:
+# * settings > developer settings > personal access tokens (classic)
+#   * notes: {LABEL APPROPRIATELY}
+#   * expiration: {CUSTOM}
+#   * scopes: NONE
 #
-# traefik_srv_env:
-#   - var: 'GCE_PROJECT'
-#     value: 'my-project-id-123456789'
-#   - var: 'GCE_SERVICE_ACCOUNT_FILE'
-#     value: '/etc/traefik/gcloud_dns.json'  # Use traefik_srv_cfg_dir.
+# Fine-grained Tokens:
+# * settings > developer settings > personal access tokens (fine-grained)
+#   * token name: {LABEL APPROPRIATELY}
+#   * expiration: {CUSTOM}
+#   * description: {DESCRIPTIVE TEXT}
+#   * resource owner: {YOUR ACCOUNT}
+#   * repository access: Public Repositories (read-only)
 #
-# Default: [] (disabled).
-traefik_srv_env: []
+# Default: '' (unauthenticated).
+#
+# Reference:
+# * https://docs.github.com/en/authentication
+traefik_srv_token: ''
 
-# Traefik Configuration.
+# Enable running service as traefik_srv_user?
 #
-# Special Case:
-# * traefik.{toml,yml} startup configuration automatically selected for systemd
-#   service. YAML is used if both exist.
-# * Traefik daemon restricted to read/write on /var/lib/traefik. Place state
-#   (e.g. ACME certificate state) data here in settings.
-# * Service credential files should be placed here.
-# * Vault encrypted files will automatically be decrypted on remote.
-# * Template files may be used (without template extension).
+# Traefik runs as root by default to access privileged ports.
 #
-# Sourced from ansible controller; automatically placed in
-# /etc/traefik/ with correct permissions.
+# Service always hardened with systemd:
+# * ProtectHome
+# * ProtectSystem
+# * PrivateTmp
+# * PrivateDevices
+# * ProtectKernelTunables
+# * ProtectKernelModules
+# * ReadWritePaths=/var/opt/traefik
+# * AmbientCapabilities=CAP_NET_BIND_SERVICE
 #
-# traefik_srv_cfg_dir: 'host_vars/db.example.com/data/traefik'
+# Values:
+#    True: Run as traefik_srv_user - CAP_NET_BIND_SERVICE required for binding
+#          on ports <1024. Run in isolated VM/container. Highly Recommended.
+#   False: Run as root - Always run in isolated VM/container. Not recommended.
 #
-# Default: '' (disabled).
-traefik_srv_cfg_dir: ''
+# Default: True.
+traefik_srv_run_as_user: true
+
+# User that Traefik will run under.
+#
+# 'traefik' will automatically be created using vars/main.yml if required.
+# All other accounts are checked for existence.
+#
+# Default: 'traefik'.
+traefik_srv_user: 'traefik'
+
+# Group that Traefik will run under.
+#
+# 'traefik' will automatically be created using vars/main.yml if required.
+# All other accounts are checked for existence.
+#
+# Default: 'traefik'.
+traefik_srv_group: 'traefik'
 
 # Enable service restart?
 #
-# Traefik only needs to be restarted for startup configuration changes.
+# Traefik requires restarts for startup configuration changes.
 #
 # Values:
 #    True: Traefik is 'restarted' after role configuration is completed. May
@@ -80,69 +121,48 @@ traefik_srv_cfg_dir: ''
 #          configuration changes will NOT be picked up.
 #
 # Default: True.
-traefik_srv_restart_enable: true
-
-# Remove old installs on upgrade success? Default: True.
-traefik_srv_delete_old_versions_enable: true
-
-# Force overwrite existing install?
-#
-# DATA DESTRUCTIVE.
-#
-# Removes existing cached downloaded archives and existing same-version install
-# directories (if any). Any user data in these directories are DESTROYED.
-#
-# Default: False.
-traefik_srv_force_overwrite: false
-
-# Only apply configuration?
-#
-# Reduces role application time by ONLY applying configuration changes.
-#
-# This should ONLY be used after the role has been fully run once.
-#
-# Useful when adding a change without reconfiguring the whole system or
-# checking and installing a new version. Suggest applying with extra options:
-#
-#   ansible-playbook site.yml
-#       --tags Traefik
-#       -e '{"traefik_srv_force_config_only_enable": true}'
-#
-# Default: False.
-traefik_srv_force_config_only_enable: false
+traefik_srv_restart: true
 
 ###############################################################################
-# Traefik User
+# Config
 ###############################################################################
 
-# Enable running service as traefik_srv_user?
+# Traefik Environment.
 #
-# Values:
-#    True: Enable user - service will be created with CAP_NET_BIND_SERVICE
-#          capabilities to allow binding on ports <1024.
-#   False: Disable user (run as root) - Not recommended. Run in isolated
-#          VM or container; always try enabling first.
+# Set environment variables for Traefik service. Especially useful for setting
+# lego configuration for let's encrypt certificates on bare metal.
 #
-# Default: True.
-traefik_srv_user_enable: true
+# traefik_cfg_env:
+#     list of dict - Environment variables to set.
+#   - var: str - Environment variable name.
+#     value: str - Environment variable value.
+#
+# traefik_cfg_env:
+#   - var: 'GCE_PROJECT'
+#     value: 'my-project-id-123456789'
+#   - var: 'GCE_SERVICE_ACCOUNT_FILE'
+#     value: '/etc/opt/traefik/gcloud_dns.json'  # Use traefik_cfg_d.
+#
+# Default: [] (disabled).
+traefik_cfg_env: []
 
-# User that Traefik will run under.
+# Traefik configuration to set.
 #
-# Enable traefik_srv_create_user if this account is not externally managed.
+# Ansible controller path to source configuration files (treated as a jinja2
+# templates allowing for ansible variable interpretation). Overwrites existing
+# config data in /etc/opt/traefik/*. Files not sourced will be removed.
 #
-# Default: 'traefik'.
-traefik_srv_user: 'traefik'
-
-# Group that Traefik will run under.
+# A default dashboard configuration (Traefik/Traefik) is autogenerated if not
+# provided.
 #
-# Enable traefik_srv_create_user if this group is not externally managed.
+# Special Case:
+# * traefik.{toml,yml} startup configuration automatically selected for systemd
+#   service. YAML is used if both exist.
+# * Service credential files should be placed here.
+# * Traefik daemon restricted to read/write on /var/opt/traefik. Place state
+#   (e.g. ACME certificate state) data in /var/opt/traefik in settings.
 #
-# Default: 'traefik'.
-traefik_srv_group: 'traefik'
-
-# Create traefik_srv_user, traefik_srv_group if not detected?
+# traefik_cfg_d: 'host_vars/traefik.example.com/conf.d'
 #
-# Applied via r_pufky.deb.users, see vars/main.yml for default user attributes.
-#
-# Default: True.
-traefik_srv_create_user: true
+# Default: '' (use minimally configured default).
+traefik_cfg_d: ''

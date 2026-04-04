@@ -2,109 +2,58 @@
 ###############################################################################
 # Configure Services
 ###############################################################################
-# Create Debian standard locations for Traefik installation and use synchronize
-# in case there are configurations with multiple files.
-#
-# Prefer TOML static configuration file but use YAML if it is the only version
-# available for service.
+# Filetree returns a dict (instead of a list of dict) for one element. Use
+# query to guarantee a list result. Traefik configuration may contain nested
+# directories.
 #
 # Reference:
-# * https://betatim.github.io/posts/traefik-config-bare-metal/
+# * https://betatim.github.io/posts/traefik-config-bare-metal
 
-- name: 'Config | manage data directories'
-  ansible.builtin.file:
-    path: '{{ item }}'
-    owner: '{{ _traefik.uid }}'
-    group: '{{ _traefik.gid }}'
-    mode: '0750'
-    recurse: true
-    state: 'directory'
-  loop:
-    - '/etc/traefik'
-    - '/var/lib/traefik'
-  become: true
-  become_user: 'root'
+- name: '{{ "Config | filesystem | set " ~ traefik___app._etc_d }}'
+  block:
+    - name: 'Config | filetree | set managed directories'
+      ansible.builtin.file:
+        path: '{{ traefik___app._etc_d ~ "/" ~ item.path }}'
+        owner: '{{ traefik__srv._user }}'
+        group: '{{ traefik__srv._group }}'
+        mode: '0750'
+        state: 'directory'
+      loop: '{{ query("community.general.filetree", traefik__cfg._d) }}'
+      loop_control:
+        label: '{{ item.path }}'
+      when: item.state == 'directory'
 
-- name: 'Config | set directory structure'
-  ansible.builtin.file:
-    path: '{{ _traefik_srv_cfg_dir._dest ~ "/" ~ item.path }}'
-    owner: '{{ _traefik.uid }}'
-    group: '{{ _traefik.gid }}'
-    mode: '0750'
-    state: 'directory'
-  when: item.state == 'directory'
-  with_community.general.filetree: '{{ _traefik_srv_cfg_dir._src }}'
-  loop_control:
-    label: '{{ item.path }}'
+    - name: 'Config | filetree | set managed files'
+      ansible.builtin.template:
+        src: '{{ item.src }}'
+        dest: '{{ traefik___app._etc_d ~ "/" ~ item.path }}'
+        owner: '{{ traefik__srv._user }}'
+        group: '{{ traefik__srv._group }}'
+        mode: '0640'
+      loop: '{{ query("community.general.filetree", traefik__cfg._d) }}'
+      loop_control:
+        label: '{{ item.path }}'
+      when: item.state == 'file'
 
-- name: 'Config | set configuration'
-  ansible.builtin.template:
-    src: '{{ item.src }}'
-    dest: '{{ _traefik_srv_cfg_dir._dest ~ "/" ~ item.path }}'
-    owner: '{{ _traefik.uid }}'
-    group: '{{ _traefik.gid }}'
-    mode: '0640'
-  when: item.state == 'file'
-  with_community.general.filetree: '{{ _traefik_srv_cfg_dir._src }}'
-  loop_control:
-    label: '{{ item.path }}'
+    - name: 'Config | filesystem | query remote files'
+      ansible.builtin.find:
+        paths: '{{ traefik___app._etc_d }}'
+        file_type: 'any'
+        hidden: true
+        recurse: true
+      register: traefik__remote
 
-# yamllint disable rule:line-length
-- name: 'Sync | set permissions'
-  ansible.builtin.shell: >-
-    chown -R '{{ _traefik.uid }}':'{{ _traefik.gid }}' '{{ _traefik_srv_cfg_dir._dest }}' '/var/lib/traefik' &&
-    find '{{ _traefik_srv_cfg_dir._dest }}' -type d -exec chmod 0750 {} \; &&
-    find '{{ _traefik_srv_cfg_dir._dest }}' -type f -exec chmod 0640 {} \; &&
-    find '/var/lib/traefik' -type d -exec chmod 0750 {} \; &&
-    find '/var/lib/traefik' -type f -exec chmod 0600 {} \;
-  args:
-    executable: '/bin/bash'
-  changed_when: false
-  become: true
-  become_user: 'root'
-# yamllint enable rule:line-length
-
-- name: 'Config | query config type'
-  ansible.builtin.stat:
-    path: '/etc/traefik/traefik.yml'
-  register: _traefik_config
-
-- name: 'Config | set service definitions'
-  ansible.builtin.include_role:
-    name: 'r_pufky.deb.systemd'
-  vars:
-    systemd_daemon_reload_enable: true
-    systemd_services:
-      - name: 'traefik'
-        state: 'present'
-        drop_in: false
-        unit:
-          description: 'Traefik Application Proxy'
-          after:
-            - 'network.target'
-        service:
-          exec_start:
-            - '{{
-                "/opt/traefik/traefik/traefik " ~
-                "--configfile /etc/traefik/traefik." ~
-                ("yml" if _traefik_config.stat.exists else "toml")
-              }}'
-          restart: 'always'
-        exec:
-          user: '{{ _traefik.uid }}'
-          group: '{{ _traefik.gid }}'
-          environment: '{{ _traefik_srv_env.raw }}'
-          protect_home: true
-          protect_system: 'strict'
-          private_tmp: true
-          private_devices: true
-          protect_kernel_tunables: true
-          protect_kernel_modules: true
-          read_write_paths:
-            - '/var/lib/traefik'
-          working_directory: '/var/lib/traefik'
-          ambient_capabilities_include:  # Rootless <1024 port binding.
-            - 'CAP_NET_BIND_SERVICE'
-        install:
-          wanted_by:
-            - 'multi-user.target'
+    - name: 'Config | filetree | remove unmanaged files and directories'
+      ansible.builtin.file:
+        path: '{{ item.path }}'
+        state: 'absent'
+      loop: '{{ traefik__remote.files | sort(attribute="path", reverse=true) }}'
+      loop_control:
+        label: '{{ item.path }}'
+      when: >
+        item.path not in
+        (
+          query("community.general.filetree", traefik__cfg._d) |
+          map(attribute='path') |
+          map('regex_replace', '^', traefik___app._etc_d ~ "/") | list
+        )

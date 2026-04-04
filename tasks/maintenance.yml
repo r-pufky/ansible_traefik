@@ -1,0 +1,18 @@
+---
+###############################################################################
+# Maintenance
+###############################################################################
+# Prune any old files from previous role versions. This is executed before any
+# operations with the new role version.
+#
+# Use shell command to increase execution speed for multiple directories.
+
+# * /etc/traefik moved to /etc/opt/traefik.
+# * /var/lib/traefik moved to /var/opt/treafik.
+- name: 'Maintenance | 3.0.0 | remove old versions'
+  ansible.builtin.shell: >
+    rm -rf /etc/traefik &&
+    rm -rf /var/lib/traefik
+  args:
+    executable: '/bin/bash'
+    removes: '/etc/traefik'

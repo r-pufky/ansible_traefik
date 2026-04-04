@@ -4,25 +4,54 @@
   connection: local
   gather_facts: false
   tasks:
-    - name: 'Prepare | create cache'
+    - name: 'Prepare | import role variables'
+      ansible.builtin.include_vars:
+        file: '{{
+            lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~ "/vars/main.yml"
+          }}'
+
+    - name: 'Prepare | cache'
       ansible.builtin.include_role:
-        name: 'r_pufky.lib.tests'
+        name: 'r_pufky.data.test'
         tasks_from: 'create_cache.yml'
       vars:
-        test_name: 'Prepare | create cache'
+        test_name: 'Prepare | cache'
 
-    - name: 'Prepare | check cache'
+    - name: '{{  "Prepare | cache | Traefik " ~ traefik___app._version }}'
       ansible.builtin.include_role:
-        name: 'r_pufky.lib.tests'
+        name: 'r_pufky.data.test'
         tasks_from: 'cache_url.yml'
       vars:
-        test_name: 'Prepare | cache {{ item }}'
-        test_dest: 'traefik_{{ item }}_linux_amd64.tar.gz'
-        test_url: '{{
-            "https://github.com/traefik/traefik/releases/download/" ~
-            item ~ "/traefik_" ~ item ~ "_linux_amd64.tar.gz"
-          }}'
+        test_name:
+          '{{  "Prepare | cache | Traefik " ~ item }}'
+        test_dest: '{{ item }}'
+        test_url: '{{ traefik___app._url_base ~ item }}'
         test_mode: '0640'
       loop:
-        - 'v3.6.7'
-        - 'v3.5.6'
+        - '{{ traefik___app._package }}'
+        - '{{ traefik___app._package_sum }}'
+
+- name: 'Prepare'
+  hosts: 'all'
+  gather_facts: false
+  tasks:
+    - name: 'Prepare | import role variables'
+      ansible.builtin.include_vars:
+        file: '{{
+            lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~ "/vars/main.yml"
+          }}'
+
+    - name: 'Prepare | inject | cached packages'
+      when: (molecule_flg_inject | default(false))
+      ansible.builtin.copy:
+        src: '{{
+            lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~ "/molecule/cache/" ~
+            item
+          }}'
+        dest: '{{ "/tmp/" ~ item }}'
+        owner: 'root'
+        group: 'root'
+        mode: '0644'
+      loop:
+        - '{{ traefik___app._package }}'
+        - '{{ traefik___app._package_sum }}'

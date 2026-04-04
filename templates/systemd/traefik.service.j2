@@ -1,0 +1,25 @@
+[Unit]
+Description=Traefik Application Proxy.
+After=network.target
+
+[Service]
+ExecStart={{ traefik___app._bin }} --configfile {{ traefik___app._etc_d }}/traefik.{{ "yml" if traefik__yaml.stat.exists else "toml" }}
+Restart=always
+User={{ traefik__srv._user }}
+Group={{ traefik__srv._group }}
+{% for env in traefik__cfg._env %}
+Environment="{{ env.var }}={{ env.value }}"
+{% endfor %}
+ProtectHome=true
+ProtectSystem=strict
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ReadWritePaths={{ traefik___app._var_d }}
+WorkingDirectory={{ traefik___app._var_d }}
+# Rootless <1024 port binding.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target

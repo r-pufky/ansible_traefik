@@ -1,47 +1,79 @@
 ---
 ###############################################################################
-# Prep
+#  Pre Execution Tasks
 ###############################################################################
-# Create user and determine UID/GID for potential remote filesystems.
-#
-# Generates:
-#   _traefik: dict - Role runtime specific config.
+# Only use data annotations in role after merging role, defaults, runtime data.
+# Service may not exist if first install.
 
-- name: 'Prep | manage users'
-  when: _traefik_srv_create_user.raw
-  ansible.builtin.include_role:
-    name: 'r_pufky.deb.users'
-    tasks_from: 'role_account_add.yml'
-  vars:
-    users_role_user: '{{ traefik_role_user }}'
-    users_role_group: '{{ traefik_role_group }}'
+- name: 'Prep | fact | record start time'
+  ansible.builtin.set_fact:
+    traefik__srv: "{{ traefik___release | r_pufky.data.v3(
 
-- name: 'Prep | enumerate system user {{ _traefik_srv_user.raw }}'
-  ansible.builtin.user:
-    name: '{{ _traefik_srv_user.raw }}'
+        _start=now(utc=True, fmt='%Y-%m-%dT%H%M%S'),
+        _token=traefik_srv_token,
+        _run_as_user=traefik_srv_run_as_user,
+        _user=traefik_srv_user,
+        _group=traefik_srv_group,
+        _restart=traefik_srv_restart,
+      ) }}"
+    traefik__cfg: "{{ traefik___app | r_pufky.data.v3(
+
+        _version=traefik_srv_version,
+        _d=traefik_cfg_d,
+        _env=traefik_cfg_env,
+
+        _package='traefik_' ~ traefik_srv_version ~ '_linux_amd64.tar.gz',
+        _package_sum='traefik_' ~ traefik_srv_version ~ '_checksums.txt',
+        _app_d='/opt/traefik/src/' ~ traefik_srv_version,
+        _url_base=traefik___repo_url ~ traefik_srv_version ~ '/',
+      ) }}"
+
+- name: '{{ "Prep | account | query user " ~ traefik__srv._user }}'
+  ansible.builtin.command: '{{ "id " ~ traefik__srv._user }}'
+  failed_when: false
+  register: traefik__cfg_check
+  changed_when: traefik__cfg_check.rc > 0
+
+- name: '{{ "Prep | account | query group " ~ traefik__srv._group }}'
+  ansible.builtin.command: '{{ "groups " ~ traefik__srv._group }}'
+  failed_when: false
+  register: traefik__group_check
+  changed_when: traefik__group_check.rc > 0
+
+- name: '{{ "Prep | account | create group " ~ traefik__srv._group }}'
+  when: traefik__group_check.rc != 0
+  ansible.builtin.group:
+    gid: '{{ traefik___group.gid }}'
+    name: '{{ traefik___group.name }}'
     state: 'present'
+
+- name: '{{ "Prep | account | create user " ~ traefik__srv._user }}'
+  when: traefik__cfg_check.rc != 0
+  ansible.builtin.user:
+    name: '{{ traefik___user.name }}'
+    group: '{{ traefik___user.group }}'
+    uid: '{{ traefik___user.uid }}'
+    shell: '{{ traefik___user.shell }}'
+    home: '{{ traefik___user.home }}'
+    create_home: '{{ traefik___user.create_home }}'
+    password: '{{ traefik___user.password }}'
+    password_lock: '{{ traefik___user.password_lock }}'
+    update_password: '{{ traefik___user.update_password }}'
+    expires: '{{ traefik___user.expires }}'
+    system: '{{ traefik___user.system }}'
+
+# Pre-existing users may have a different UID/GID/Home.
+- name: '{{ "Prep | account | enumerate " ~ traefik__srv._user }}'
+  ansible.builtin.user:
+    name: '{{ traefik__srv._user }}'
   check_mode: true
   changed_when: false
-  register: _traefik_srv_user_query
+  register: traefik__cfg_query
 
-- name: 'Prep | parse system user UID/GID'
+- name: 'Prep | fact | parse service UID/GID'
   ansible.builtin.set_fact:
-    _traefik_srv_user: '{{
-        _traefik_srv_user |
-        combine({"_uid": _traefik_srv_user_query.uid})
-      }}'
-    _traefik_srv_group: '{{
-        _traefik_srv_group |
-        combine({"_gid": _traefik_srv_user_query.group})
-      }}'
+    traefik__cfg: "{{ traefik__cfg | r_pufky.data.v3(
 
-- name: 'Prep | set service user'
-  ansible.builtin.set_fact:
-    _traefik: {
-      uid: '{{
-          _traefik_srv_user._uid if _traefik_srv_user_enable else "root"
-        }}',
-      gid: '{{
-          _traefik_srv_group._gid if _traefik_srv_user_enable else "root"
-        }}'
-    }
+        _uid=traefik__cfg_query.uid,
+        _gid=traefik__cfg_query.group,
+      ) }}"
