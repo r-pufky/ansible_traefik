@@ -10,10 +10,10 @@
     path: '{{ traefik___app._etc_d ~ "/traefik.yml" }}'
   register: traefik__yaml
 
-- name: '{{ "Services | filesystem | set " ~ traefik__cfg._service }}'
+- name: '{{ "Services | filesystem | set " ~ traefik___app._service }}'
   ansible.builtin.template:
     src: 'systemd/traefik.service.j2'
-    dest: '{{ traefik__cfg._service }}'
+    dest: '{{ traefik___app._service }}'
     owner: 'root'
     group: 'root'
     mode: '0644'
