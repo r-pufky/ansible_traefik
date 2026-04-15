@@ -10,6 +10,7 @@
 # * https://betatim.github.io/posts/traefik-config-bare-metal
 
 - name: '{{ "Config | filesystem | set " ~ traefik___app._etc_d }}'
+  when: traefik__cfg._d | length > 0
   block:
     - name: 'Config | filetree | set managed directories'
       ansible.builtin.file:
@@ -57,3 +58,18 @@
           map(attribute='path') |
           map('regex_replace', '^', traefik___app._etc_d ~ "/") | list
         )
+
+- name: '{{ "Config | filesystem | query " ~ traefik___app._etc_d }}'
+  when: traefik__cfg._d | length == 0
+  ansible.builtin.find:
+    paths: "{{ traefik___app._etc_d }}"
+    recurse: false  # Don't need to enumerate sub-directories to remove.
+    hidden: true
+  register: traefik__cmd
+
+- name: '{{ "Config | filesystem | clear " ~ traefik___app._etc_d }}'
+  when: traefik__cfg._d | length == 0
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ traefik__cmd.files }}"

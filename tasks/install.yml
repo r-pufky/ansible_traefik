@@ -128,7 +128,7 @@
 - name: '{{ "Install | filesystem | set minimal " ~ traefik___app._etc_d }}'
   when: traefik__cfg._d | length == 0
   block:
-    - name: 'Config | filetree | set managed directories'
+    - name: 'Install | filetree | set managed directories'
       ansible.builtin.file:
         path: '{{ traefik___app._etc_d ~ "/" ~ item.path }}'
         owner: '{{ traefik__srv._user }}'
@@ -140,7 +140,7 @@
         label: '{{ item.path }}'
       when: item.state == 'directory'
 
-    - name: 'Config | filetree | set managed files'
+    - name: 'Install | filetree | set managed files'
       ansible.builtin.template:
         src: '{{ item.src }}'
         dest: '{{ traefik___app._etc_d ~ "/" ~ item.path }}'
@@ -152,7 +152,7 @@
         label: '{{ item.path }}'
       when: item.state == 'file'
 
-    - name: 'Config | filesystem | query remote files'
+    - name: 'Install | filesystem | query remote files'
       ansible.builtin.find:
         paths: '{{ traefik___app._etc_d }}'
         file_type: 'any'
@@ -160,7 +160,7 @@
         recurse: true
       register: traefik__remote
 
-    - name: 'Config | filetree | remove unmanaged files and directories'
+    - name: 'Install | filetree | remove unmanaged files and directories'
       ansible.builtin.file:
         path: '{{ item.path }}'
         state: 'absent'

@@ -22,7 +22,7 @@ traefik___release: "{{ {} | r_pufky.data.v3(
 
     _date='2026-04-02',
     _debian='trixie',
-    _app='v3.6.12',
+    _app='v3.6.13',
   ) }}"
 
 traefik___packages:

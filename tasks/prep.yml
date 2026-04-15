@@ -16,7 +16,7 @@
         _group=traefik_srv_group,
         _restart=traefik_srv_restart,
       ) }}"
-    traefik__cfg: "{{ traefik___app | r_pufky.data.v3(
+    traefik__cfg: "{{ {} | r_pufky.data.v3(
 
         _version=traefik_srv_version,
         _d=traefik_cfg_d,
