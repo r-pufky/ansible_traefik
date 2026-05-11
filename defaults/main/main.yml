@@ -40,11 +40,11 @@ traefik_flg_config: false
 #   RECOMMEND: Always check release notes when upgrading versions - custom
 #              configuration files may break though role will likely not.
 #
-# Default: 'v3.6.13'.
+# Default: 'v3.7.0'.
 #
 # Reference:
 # * https://doc.traefik.io/traefik/deprecation/releases
-traefik_srv_version: 'v3.6.13'
+traefik_srv_version: 'v3.7.0'
 
 # Github access token (traefik).
 #
